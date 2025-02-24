@@ -1,25 +1,36 @@
 const express=require('express')
+const {adminAuth,userAuth}=require('./middlewares/auth.js')
 
 
 const app=express()
 
-app.use('/user',(req,res,next)=>
+app.use('/admin',adminAuth)
+
+app.get('/user',userAuth,(req,res)=>
 {
-    console.log("helllllllllllllllllllllll")
-    next()
-  //res.send(" 1st  response")
- 
-},(req,res,next )=>
+res.send("user verified")
+})
+
+app.get('/admin/getAllData',(req,res)=>
 {
-    console.log("in 2nd  response")
-    next()
-//res.send("2nd response ")
-},(req,res,next)=>
+    console.log("dtaa response")
+    res.send("dadta data successfully")
+    
+})
+
+app.get('/admin/deleteData',(eq,res)=>
     {
-        console.log("in  3rd  response")
-   // res.send("3nd response ")
-   next()
+        console.log("delete response")
+        res.send("deleted data successfully")
     })
+
+    app.get('/user/login',(req,res)=>
+    {
+   res.send(" welcome")
+    })
+    
+    
+    
 
 // app.get('/ab*c',(req,res)=>
 // {
