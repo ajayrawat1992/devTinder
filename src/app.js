@@ -44,18 +44,20 @@ app.get('/id',async (req,res)=>
     }
 })
   // delete user data 
+
 app.delete('/user',async(req,res)=>
     {
-      const userID=req.body.userId
-      console.log(userID)
+      const userName=req.body.firstName
+      console.log(userName)
       try {
-        const user=await User.findByIdAndDelete(userID)
+        const user=await User.deleteMany({firstName:userName})
         console.log(user)
         res.send("data deleted successfully")
       } catch (error) {
         res.status(404).send("user not found")
       }
     })
+
 
 //get all the users  from the database
 app.get('/feed',async (req,res)=>
@@ -73,36 +75,59 @@ app.get('/feed',async (req,res)=>
  //  save data in Database by POST request
 app.post('/signup', async (req,res)=>
 {
+        const user=new User(req.body)    // here we created new instance of User model by passing dummy data
     // console.log(req.body)
-    const user=new User(req.body)      // here we created new instance of User model by passing dummy data
-    
-    try {
-        await user.save()     //saving data in database  //user.save() always returns promise
+  
+    try {     
+
+      if(user.firstName.length > 15)
+      {
+        throw new Error("Enter proper firstname")
+      }    
+      
+        await user.save()             //  saving data in database  //user.save() always returns promise
         res.send("data saved successfully")
         
     } catch (error) {
-     res.status(400).send(error.message)        
+     res.status(400).send("Error : "+error.message)        
     }
     })
 
-    
-// update a data using Patch request
-app.patch('/user',async (req,res)=>
-{
-  try {
-    const userEmailId=req.body.emailid
-    console.log(userEmailId)
-    const data=req.body 
-    const user=await User.findOneAndUpdate({emailid:userEmailId},data, {returnDocument:"after"})
-    res.send(user)
 
-  } catch (error) {
-        res.status(404).send("something went wrong")
-  }
+// update a data using Patch request
+  app.patch('/user/:userId',async (req,res)=>
+  {
+    
+    //const userId=req.body._id
+    const userId=req.params?.userId  // req.params.userId is used to retrieve the value of a dynamic parameter (often part of the URL) from a request.  
+    const data=req.body 
+    //console.log(data)
+    try {
+        const ALLOWED_UPDATES=['skills','Age','gender']
+
+          const isUpdateAllowed=Object.keys(data).every(k=>ALLOWED_UPDATES.includes(k))
+          console.log(isUpdateAllowed)      // this is API level updation...ex. if we dont want to update emailid 
+
+          if(!isUpdateAllowed)
+          {
+              throw new Error("update not allowed")
+          }
+          if(data?.skills.length > 10)
+          {
+            throw new Error(" Skills Exceeded Maximum length")
+          }
+         
+    
+    const user=await User.findByIdAndUpdate({_id:userId},data,
+       {returnDocument:"after",runValidators:true})      //By default, it will return the document before the update was applied.
+       res.send(user)
+
+  } 
+  catch (error) {
+        res.status(404).send("update failed : "+error.message)
+     }
    
 })
-
-
 
 connectDB()
 .then(()=>
