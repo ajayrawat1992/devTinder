@@ -103,7 +103,7 @@ app.post('/signup', async (req,res)=>
     const data=req.body 
     //console.log(data)
     try {
-        const ALLOWED_UPDATES=['skills','Age','gender']
+        const ALLOWED_UPDATES=['skills','gender']
 
           const isUpdateAllowed=Object.keys(data).every(k=>ALLOWED_UPDATES.includes(k))
           console.log(isUpdateAllowed)      // this is API level updation...ex. if we dont want to update emailid 

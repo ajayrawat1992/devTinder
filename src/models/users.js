@@ -1,5 +1,5 @@
 const mongoose=require('mongoose')
-
+const validator=require('validator')
 
 const userSchema=new mongoose.Schema({
      
@@ -27,6 +27,13 @@ const userSchema=new mongoose.Schema({
         unique:true,
         lowercase:true,
         trim:true,
+        validate(value)
+        {
+        if(!validator.isEmail(value))
+        {
+            throw new Error("Invalid emailid :: " +value)
+        }
+        }
         // validate(value){
         //     const re= /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/ ;
         //     if( !(re.test(value)))
@@ -34,13 +41,20 @@ const userSchema=new mongoose.Schema({
         //         throw new Error('Please fill a valid email address')
         //     }
         //}
-       match:[/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
+       //match:[/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please fill a valid email address']
     },
     
     password:{
         type:String,
         required:true,
-        minLength:8
+        minLength:8,
+        // validate(value)
+        // {
+        //     if(!validator.isStrongPassword(value))
+        //     {
+        //         throw new Error("enter strong Password : " +value)
+        //     }
+        // }
     },
     
     gender:{
@@ -52,7 +66,15 @@ const userSchema=new mongoose.Schema({
     },
     photoURL:{
         type:String,
-        default:"https://cdn-icons-png.flaticon.com/128/5355/5355316.png"
+        default:"https://cdn-icons-png.flaticon.com/128/5355/5355316.png",
+        validate(value)
+        {
+            if(!validator.isURL(value))
+            {
+                throw new Error("Invalid phootoURL: :: " +value)
+            }
+        }
+
     },
     skills:{
         type:[String],
