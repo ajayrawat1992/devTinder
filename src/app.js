@@ -2,7 +2,8 @@ const express=require('express')
 const {connectDB}=require('./config/Database.js')
 //const {adminAuth,userAuth}=require('./middlewares/auth.js')
 const {User}=require('./models/users.js')
-
+const   {validatorSignUp}=require('./utils/validation.js')
+const bcrypt  = require('bcrypt')
 
 const app=express()
 
@@ -72,35 +73,62 @@ app.get('/feed',async (req,res)=>
     }
 })
 
+
+//Login 
+   app.post('/login', async(req,res)=>
+  {
+    try {
+
+      const {emailid,password}=req.body
+     // console.log(emailid)
+const userData= await User.findOne({emailid:emailid})
+//console.log(userData)
+if(!userData)
+{
+  throw new Error("Invalid credentials")
+}
+const isPasswordValid= await bcrypt.compare(password,userData.password)
+if(isPasswordValid)
+{
+  res.send("Eureka!!!!!")
+}
+else{
+  throw new Error("Invalid credentials")
+}
+      
+    } catch (error) {
+       res.status(400).send("Error : " +error)
+    }
+  })
+
  //  save data in Database by POST request
 app.post('/signup', async (req,res)=>
 {
-        const user=new User(req.body)    // here we created new instance of User model by passing dummy data
-    // console.log(req.body)
-  
+
     try {     
 
-      if(user.firstName.length > 15)
-      {
-        throw new Error("Enter proper firstname")
-      }    
+   validatorSignUp(req)                                   // validating the incoming data
+   const {firstName,lastName,emailid,password}=req.body
+   const hashPassword= await bcrypt.hash(password,10)    //encrypting the password 
+   //console.log("hashPassword",hashPassword)
       
-        await user.save()             //  saving data in database  //user.save() always returns promise
+      const user=new User({firstName,lastName,emailid,password:hashPassword})    // here we created new instance of User model by passing dummy data
+         
+        await user.save()                                     //  saving data in database  //user.save() always returns promise
         res.send("data saved successfully")
         
     } catch (error) {
-     res.status(400).send("Error : "+error.message)        
+     res.status(400).send("Error : "+error.message)
     }
     })
 
 
 // update a data using Patch request
   app.patch('/user/:userId',async (req,res)=>
-  {
-    
+  {    
     //const userId=req.body._id
     const userId=req.params?.userId  // req.params.userId is used to retrieve the value of a dynamic parameter (often part of the URL) from a request.  
-    const data=req.body 
+    const data=req.body
     //console.log(data)
     try {
         const ALLOWED_UPDATES=['skills','gender']

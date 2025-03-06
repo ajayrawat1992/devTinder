@@ -18,7 +18,7 @@ const userSchema=new mongoose.Schema({
         type:Number,
         min:18,
         max:50,
-        required:true
+    
     },
     
     emailid:{
@@ -74,7 +74,6 @@ const userSchema=new mongoose.Schema({
                 throw new Error("Invalid phootoURL: :: " +value)
             }
         }
-
     },
     skills:{
         type:[String],
