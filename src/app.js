@@ -81,17 +81,20 @@ app.post('/login', async(req,res)=>
   {
     try {
       const {emailid,password}=req.body
-     // console.log(emailid)
+     
      const userData= await User.findOne({emailid:emailid})
-//console.log(userData)
+
      if(!userData)
     {
      throw new Error("Invalid credentials")
     }
-     const isPasswordValid= await bcrypt.compare(password,userData.password)
+      //const isPasswordValid= await bcrypt.compare(password,userData.password)
+      const isPasswordValid =await userData.validatePassword(password)
     if(isPasswordValid)
     {
-  const token= jwt.sign({_id:userData._id},'Dev@123',{expiresIn:'7d'})   // expire option in token level
+      const token= await userData.getJWT()  // This function can now be called directly on user instance (ex.pritam user )
+
+  //const token= jwt.sign({_id:userData._id},'Dev@123',{expiresIn:'7d'})   // expire option in token level
   console.log('token::: ',token)
    res.cookie('token',token,{expires: new Date(Date.now() + 1 * 3600000)})   //// expire option in cookie level
   //console.log(token)
@@ -114,7 +117,7 @@ app.post('/signup', async (req,res)=>
 
    validatorSignUp(req)                                   // validating the incoming data
    const {firstName,lastName,emailid,password}=req.body
-   const hashPassword= await bcrypt.hash(password,10)    //encrypting the password 
+   const hashPassword= await bcrypt.hash(password,10)        //encrypting the password 
    //console.log("hashPassword",hashPassword)
       
       const user=new User({firstName,lastName,emailid,password:hashPassword})    // here we created new instance of User model by passing dummy data
@@ -131,7 +134,7 @@ app.get('/profile',userAuth, async(req,res)=>
 {
   try {
       const user=req.user
-      console.log('user........',user)
+     // console.log('user........',user)
     res.send("reading cookies")
  
   } catch (error) {
