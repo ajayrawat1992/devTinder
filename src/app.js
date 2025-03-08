@@ -1,16 +1,20 @@
 const express=require('express')
 const {connectDB}=require('./config/Database.js')
-const {userAuth}=require('./middlewares/auth.js')
-const {User}=require('./models/users.js')
-const   {validatorSignUp}=require('./utils/validation.js')
-const bcrypt  = require('bcrypt')
  const cookieParser=require('cookie-parser')
- const jwt=require('jsonwebtoken')
 
 const app=express()
 
 app.use(express.json())   //express.json() middleware will convert JSON object into JavaScript object and  adds the javascript object onto req.body 
-app.use(cookieParser())  //
+app.use(cookieParser())  //req.cookies will give undefined without using it
+
+
+const authRouter=require('./Routes/auth.js')
+const profileRouter=require('./Routes/profile.js')
+const requestRouter=require('./Routes/request.js')
+
+app.use('/',authRouter)         //here   authrouter works as a middleware
+app.use('/',profileRouter)
+app.use('/',requestRouter)
 
 
 //get user by emailid
@@ -34,7 +38,9 @@ app.use(cookieParser())  //
 //     }
 // })
 
+
 // //get user by ID
+
 // app.get('/id',async (req,res)=>
 // {
 //     try {
@@ -46,7 +52,9 @@ app.use(cookieParser())  //
 //        res.status(404).send("user not found")        
 //     }
 // })
-//   // delete user data 
+
+
+ // delete user data 
 
 // app.delete('/user',async(req,res)=>
 //     {
@@ -63,6 +71,7 @@ app.use(cookieParser())  //
 
 
 // //get all the users  from the database
+
 // app.get('/feed',async (req,res)=>
 // {
 //     try {
@@ -75,92 +84,15 @@ app.use(cookieParser())  //
 //     }
 // })
 
+//update a data using Patch request
 
-//Login 
-app.post('/login', async(req,res)=>
-  {
-    try {
-      const {emailid,password}=req.body
-     
-     const userData= await User.findOne({emailid:emailid})
-
-     if(!userData)
-    {
-     throw new Error("Invalid credentials")
-    }
-      //const isPasswordValid= await bcrypt.compare(password,userData.password)
-      const isPasswordValid =await userData.validatePassword(password)
-    if(isPasswordValid)
-    {
-      const token= await userData.getJWT()  // This function can now be called directly on user instance (ex.pritam user )
-
-  //const token= jwt.sign({_id:userData._id},'Dev@123',{expiresIn:'7d'})   // expire option in token level
-  console.log('token::: ',token)
-   res.cookie('token',token,{expires: new Date(Date.now() + 1 * 3600000)})   //// expire option in cookie level
-  //console.log(token)
-  res.send("Login successful !!!!!")
-}
-else{
-  throw new Error("Invalid credentials")
-}
-      
-    } catch (error) {
-       res.status(400).send("Error : " +error)
-    }
-  })
-
- //  save data in Database by POST request
-app.post('/signup', async (req,res)=>
-{
-
-    try {     
-
-   validatorSignUp(req)                                   // validating the incoming data
-   const {firstName,lastName,emailid,password}=req.body
-   const hashPassword= await bcrypt.hash(password,10)        //encrypting the password 
-   //console.log("hashPassword",hashPassword)
-      
-      const user=new User({firstName,lastName,emailid,password:hashPassword})    // here we created new instance of User model by passing dummy data
-         
-        await user.save()                                     //  saving data in database  //user.save() always returns promise
-        res.send("data saved successfully")
-        
-    } catch (error) {
-     res.status(400).send("Error : "+error.message)
-    }
-    })
-
-app.get('/profile',userAuth, async(req,res)=>
-{
-  try {
-      const user=req.user
-     // console.log('user........',user)
-    res.send("reading cookies")
- 
-  } catch (error) {
-    res.status(400).send("error :: "+error.message)
-  }
-  })
-
-
-  app.get('/connectionrequest',userAuth,(req,res)=>
-  {
-    const user=req.user
-
-    console.log("connection making................")
-    res.send(user.firstName+" sent the request")
-  })
-
-
-
-
-// update a data using Patch request
 //   app.patch('/user/:userId',async (req,res)=>
 //   {    
 //     //const userId=req.body._id
 //     const userId=req.params?.userId  // req.params.userId is used to retrieve the value of a dynamic parameter (often part of the URL) from a request.  
 //     const data=req.body
-//     //console.log(data)
+
+//     console.log(data)
 //     try {
 //         const ALLOWED_UPDATES=['skills','gender']
 
@@ -175,8 +107,7 @@ app.get('/profile',userAuth, async(req,res)=>
 //           {
 //             throw new Error(" Skills Exceeded Maximum length")
 //           }
-         
-    
+                
 //     const user=await User.findByIdAndUpdate({_id:userId},data,
 //        {returnDocument:"after",runValidators:true})      //By default, it will return the document before the update was applied.
 //        res.send(user)
@@ -187,6 +118,7 @@ app.get('/profile',userAuth, async(req,res)=>
 //      }
    
 // })
+
 
 connectDB()
 .then(()=>

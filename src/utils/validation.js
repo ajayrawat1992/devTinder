@@ -7,7 +7,7 @@ const validatorSignUp=(req)=>
 
    //console.log(firstName)
 
-    if(!firstName || !lastName)
+    if(!firstName || !lastName) 
     {
         throw new Error("firstName or lastName  is  not valid")
     }
